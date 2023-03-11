@@ -3,32 +3,22 @@ from sqlalchemy.orm import relationship
 
 from db import Base
     
-class Ingredient(Base):
-    __tablename__ = "ingredients"
+class Item(Base):
+    __tablename__ = "items"
     
     id = Column(Integer, primary_key=True,index=True)
-    recipe_id = Column(Integer,ForeignKey('recipes.id'),nullable=False)
     name = Column(String(80), nullable=False, unique=True,index=True)
     price = Column(Float(precision=2), nullable=False)
-    quantity = Column(Integer, nullable=False)
-    
+    description = Column(String(200))
+    store_id = Column(Integer,ForeignKey('stores.id'),nullable=False)
     def __repr__(self):
-        return 'IngredientModel(recipe_id=%s, name=%s, price=%s, quantity=%s)' % (self.recipe_id, 
-                                                                                  self.name, 
-                                                                                  self.price, 
-                                                                                  self.quantity)
+        return 'ItemModel(name=%s, price=%s,store_id=%s)' % (self.name, self.price,self.store_id)
     
-class Recipe(Base):
-    __tablename__ = "recipes"
+class Store(Base):
+    __tablename__ = "stores"
     id = Column(Integer, primary_key=True,index=True)
     name = Column(String(80), nullable=False, unique=True)
-    calories = Column(Integer, nullable=False)
-    description = Column(String(255), nullable=True)
-    Ingredients = relationship("Ingredient",
-                         primaryjoin="Recipe.id == Ingredient.recipe_id",
-                         cascade="all, delete-orphan")
+    items = relationship("Item",primaryjoin="Store.id == Item.store_id",cascade="all, delete-orphan")
 
     def __repr__(self):
-        return 'Recipe(name=%s, calories=%s, description=%s)' % (self.name, 
-                                                                 self.calories, 
-                                                                 self.description)
+        return 'Store(name=%s)' % self.name
