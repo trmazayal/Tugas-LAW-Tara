@@ -7,7 +7,7 @@ class Item(Base):
     __tablename__ = "items"
     
     id = Column(Integer, primary_key=True,index=True)
-    name = Column(String(80), nullable=False, unique=True,index=True)
+    name = Column(String(80), nullable=False, index=True)
     price = Column(Float(precision=2), nullable=False)
     recipe_id = Column(Integer,ForeignKey('recipes.id'),nullable=False)
     def __repr__(self):

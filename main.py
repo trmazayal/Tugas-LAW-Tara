@@ -19,7 +19,7 @@ app = FastAPI(title="Tugas Mandiri 1 - LAW 2023",
 
 models.Base.metadata.create_all(bind=engine)
 
-DETAIL_INGREDIENT = "Ingredient not found"
+DETAIL_ITEM = "Item not found"
 DETAIL_RECIPE = "Recipe not found"
 
 @app.exception_handler(Exception)
@@ -73,7 +73,7 @@ def get_item(item_id: int, db: Session = Depends(get_db)):
     """
     db_item = ItemRepo.fetch_by_id(db, item_id)
     if db_item is None:
-        raise HTTPException(status_code=404, detail="Item not found with the given ID")
+        raise HTTPException(status_code=404, detail=DETAIL_ITEM)
     return db_item
 
 
@@ -84,7 +84,7 @@ async def delete_item(item_id: int, db: Session = Depends(get_db)):
     """
     db_item = ItemRepo.fetch_by_id(db, item_id)
     if db_item is None:
-        raise HTTPException(status_code=404, detail="Item not found with the given ID")
+        raise HTTPException(status_code=404, detail=DETAIL_ITEM)
     await ItemRepo.delete(db, item_id)
     return "Item deleted successfully!"
 
@@ -102,7 +102,7 @@ async def update_item(item_id: int, item_request: schemas.Item, db: Session = De
         db_item.recipe_id = update_item_encoded['recipe_id']
         return await ItemRepo.update(db=db, item_data=db_item)
     else:
-        raise HTTPException(status_code=400, detail="Item not found with the given ID")
+        raise HTTPException(status_code=400, detail=DETAIL_ITEM)
 
 
 @app.post('/recipes', tags=["Recipe"], response_model=schemas.Recipe, status_code=201)
@@ -140,7 +140,7 @@ def get_recipe(recipe_id: int, db: Session = Depends(get_db)):
     """
     db_recipe = RecipeRepo.fetch_by_id(db, recipe_id)
     if db_recipe is None:
-        raise HTTPException(status_code=404, detail="Recipe not found with the given ID")
+        raise HTTPException(status_code=404, detail=DETAIL_RECIPE)
     return db_recipe
 
 
@@ -151,7 +151,7 @@ async def delete_recipe(recipe_id: int, db: Session = Depends(get_db)):
     """
     db_recipe = RecipeRepo.fetch_by_id(db, recipe_id)
     if db_recipe is None:
-        raise HTTPException(status_code=404, detail="Recipe not found with the given ID")
+        raise HTTPException(status_code=404, detail=DETAIL_RECIPE)
     await RecipeRepo.delete(db, recipe_id)
     return "Recipe deleted successfully!"
 
