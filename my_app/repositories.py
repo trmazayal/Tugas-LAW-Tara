@@ -7,7 +7,9 @@ from . import models, schemas
 class ItemRepo:
     
  async def create(db: Session, item: schemas.ItemCreate):
-        db_item = models.Item(name=item.name,price=item.price,description=item.description,recipe_id=item.recipe_id)
+        db_item = models.Item(name=item.name,
+                              price=item.price,
+                              recipe_id=item.recipe_id)
         db.add(db_item)
         db.commit()
         db.refresh(db_item)
@@ -38,11 +40,14 @@ class ItemRepo:
 class RecipeRepo:
     
     async def create(db: Session, recipe: schemas.RecipeCreate):
-            db_recipe = models.Recipe(name=recipe.name)
-            db.add(db_recipe)
-            db.commit()
-            db.refresh(db_recipe)
-            return db_recipe
+        db_recipe = models.Recipe(name=recipe.name,
+                                calories=recipe.calories,
+                                description=recipe.description,
+                                )
+        db.add(db_recipe)
+        db.commit()
+        db.refresh(db_recipe)
+        return db_recipe
         
     def fetch_by_id(db: Session,_id:int):
         return db.query(models.Recipe).filter(models.Recipe.id == _id).first()

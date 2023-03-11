@@ -99,7 +99,6 @@ async def update_item(item_id: int, item_request: schemas.Item, db: Session = De
         update_item_encoded = jsonable_encoder(item_request)
         db_item.name = update_item_encoded['name']
         db_item.price = update_item_encoded['price']
-        db_item.description = update_item_encoded['description']
         db_item.recipe_id = update_item_encoded['recipe_id']
         return await ItemRepo.update(db=db, item_data=db_item)
     else:

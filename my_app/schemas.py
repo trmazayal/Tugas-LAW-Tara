@@ -4,7 +4,6 @@ from pydantic import BaseModel
 class ItemBase(BaseModel):
     name: str
     price: float
-    description: Optional[str] = None
     recipe_id: int
 
 
@@ -21,6 +20,8 @@ class Item(ItemBase):
 
 class RecipeBase(BaseModel):
     name: str
+    calories: float
+    description: Optional[str] = None
 
 
 class RecipeCreate(RecipeBase):
