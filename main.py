@@ -1,10 +1,9 @@
-from typing import List, Optional
-
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+from typing import List, Optional
 import activity
 import time
 import asyncio
@@ -12,7 +11,7 @@ import asyncio
 import my_app.models as models
 import my_app.schemas as schemas
 from db import get_db, engine
-from my_app.repositories import ItemRepo, StoreRepo
+from my_app.repositories import IngredientRepo, RecipeRepo
 
 app = FastAPI(title="Tugas Mandiri 1 - LAW 2023",
               description="Tara Mazaya Lababan - 2006473535",
@@ -20,11 +19,14 @@ app = FastAPI(title="Tugas Mandiri 1 - LAW 2023",
 
 models.Base.metadata.create_all(bind=engine)
 
+DETAIL_INGREDIENT = "Ingredient not found"
+DETAIL_RECIPE = "Recipe not found"
 
 @app.exception_handler(Exception)
 def validation_exception_handler(request, err):
     base_error_message = f"Failed to execute: {request.method}: {request.url}"
-    return JSONResponse(status_code=400, content={"message": f"{base_error_message}. Detail: {err}"})
+    context = {"message": f"{base_error_message}. Detail: {err}"}
+    return JSONResponse(status_code=400,content=context)
 
 
 @app.middleware("http")
@@ -37,122 +39,126 @@ async def add_process_time_header(request, call_next):
     return response
 
 
-@app.post('/items', tags=["Item"], response_model=schemas.Item, status_code=201)
-async def create_item(item_request: schemas.ItemCreate, db: Session = Depends(get_db)):
+@app.post('/ingredients', tags=["Ingredient"], response_model=schemas.Ingredient, status_code=201)
+async def create_ingredient(ingredient_request: schemas.IngredientCreate, db: Session = Depends(get_db)):
     """
-    Create an Item and store it in the database
+    Create an Ingredient and recipe it in the database
     """
 
-    db_item = ItemRepo.fetch_by_name(db, name=item_request.name)
-    if db_item:
-        raise HTTPException(status_code=400, detail="Item already exists!")
+    db_ingredient = IngredientRepo.fetch_by_name(db, name=ingredient_request.name)
+    if db_ingredient:
+        raise HTTPException(status_code=400, detail="Ingredient already exists!")
 
-    return await ItemRepo.create(db=db, item=item_request)
+    return await IngredientRepo.create(self=db, ingredient=ingredient_request)
 
 
-@app.get('/items', tags=["Item"], response_model=List[schemas.Item])
-def get_all_items(name: Optional[str] = None, db: Session = Depends(get_db)):
+@app.get('/ingredients', tags=["Ingredient"], response_model=List[schemas.Ingredient])
+def get_all_ingredient(name: Optional[str] = None, db: Session = Depends(get_db)):
     """
     Get all the Items stored in database
     """
     if name:
-        items = []
-        db_item = ItemRepo.fetch_by_name(db, name)
-        items.append(db_item)
-        return items
+        ingredients = []
+        db_ingredient = IngredientRepo.fetch_by_name(db, name)
+        if db_ingredient:
+            ingredients.append(db_ingredient)
+            return ingredients
+        else:
+            raise HTTPException(status_code=404, detail=DETAIL_INGREDIENT)
     else:
-        return ItemRepo.fetch_all(db)
+        return IngredientRepo.fetch_all(db)
 
 
-@app.get('/items/{item_id}', tags=["Item"], response_model=schemas.Item)
-def get_item(item_id: int, db: Session = Depends(get_db)):
+@app.get('/ingredients/{ingredient_id}', tags=["Ingredient"], response_model=schemas.Ingredient)
+def get_item(ingredient_id: int, db: Session = Depends(get_db)):
     """
-    Get the Item with the given ID provided by User stored in database
+    Get the Ingredient with the given ID provided by User stored in database
     """
-    db_item = ItemRepo.fetch_by_id(db, item_id)
-    if db_item is None:
-        raise HTTPException(status_code=404, detail="Item not found with the given ID")
-    return db_item
+    db_ingredient = IngredientRepo.fetch_by_id(db, ingredient_id)
+    if db_ingredient is None:
+        raise HTTPException(status_code=404, detail=DETAIL)
+    return db_ingredient
 
 
-@app.delete('/items/{item_id}', tags=["Item"])
-async def delete_item(item_id: int, db: Session = Depends(get_db)):
+@app.delete('/ingredients/{ingredient_id}', tags=["Ingredient"])
+async def delete_item(ingredient_id: int, db: Session = Depends(get_db)):
     """
-    Delete the Item with the given ID provided by User stored in database
+    Delete the Ingredient with the given ID provided by User stored in database
     """
-    db_item = ItemRepo.fetch_by_id(db, item_id)
-    if db_item is None:
-        raise HTTPException(status_code=404, detail="Item not found with the given ID")
-    await ItemRepo.delete(db, item_id)
-    return "Item deleted successfully!"
+    db_ingredient = IngredientRepo.fetch_by_id(db, ingredient_id)
+    if db_ingredient is None:
+        raise HTTPException(status_code=404, detail=DETAIL)
+    await IngredientRepo.delete(db, ingredient_id)
+    return "Ingredient deleted successfully!"
 
 
-@app.put('/items/{item_id}', tags=["Item"], response_model=schemas.Item)
-async def update_item(item_id: int, item_request: schemas.Item, db: Session = Depends(get_db)):
+@app.put('/ingredients/{ingredient_id}', tags=["Ingredient"], response_model=schemas.Ingredient)
+async def update_item(ingredient_id: int, ingredient_request: schemas.Ingredient, db: Session = Depends(get_db)):
     """
-    Update an Item stored in the database
+    Update an Ingredient stored in the database
     """
-    db_item = ItemRepo.fetch_by_id(db, item_id)
-    if db_item:
-        update_item_encoded = jsonable_encoder(item_request)
-        db_item.name = update_item_encoded['name']
-        db_item.price = update_item_encoded['price']
-        db_item.description = update_item_encoded['description']
-        db_item.store_id = update_item_encoded['store_id']
-        return await ItemRepo.update(db=db, item_data=db_item)
+    db_ingredient = IngredientRepo.fetch_by_id(db, ingredient_id)
+    print(db_ingredient)
+    if db_ingredient:
+        update_item_encoded = jsonable_encoder(ingredient_request)
+        db_ingredient.name = update_item_encoded['name']
+        db_ingredient.price = update_item_encoded['price']
+        db_ingredient.quantity = update_item_encoded['quantity']
+        db_ingredient.recipe_id = update_item_encoded['recipe_id']
+        return await IngredientRepo.update(self=db, ingredient_data=db_ingredient)
     else:
-        raise HTTPException(status_code=400, detail="Item not found with the given ID")
+        raise HTTPException(status_code=400, detail=DETAIL)
 
 
-@app.post('/stores', tags=["Store"], response_model=schemas.Store, status_code=201)
-async def create_store(store_request: schemas.StoreCreate, db: Session = Depends(get_db)):
+@app.post('/recipes', tags=["Recipe"], response_model=schemas.Recipe, status_code=201)
+async def create_recipe(recipe_request: schemas.RecipeCreate, db: Session = Depends(get_db)):
     """
-    Create a Store and save it in the database
+    Create a Recipe and save it in the database
     """
-    db_store = StoreRepo.fetch_by_name(db, name=store_request.name)
+    db_store = RecipeRepo.fetch_by_name(db, name=recipe_request.name)
     print(db_store)
     if db_store:
-        raise HTTPException(status_code=400, detail="Store already exists!")
+        raise HTTPException(status_code=400, detail="Recipe already exists!")
 
-    return await StoreRepo.create(db=db, store=store_request)
+    return await RecipeRepo.create(self=db, recipe=recipe_request)
 
 
-@app.get('/stores', tags=["Store"], response_model=List[schemas.Store])
+@app.get('/recipes', tags=["Recipe"], response_model=List[schemas.Recipe])
 def get_all_stores(name: Optional[str] = None, db: Session = Depends(get_db)):
     """
-    Get all the Stores stored in database
+    Get all the Recipes stored in database
     """
     if name:
-        stores = []
-        db_store = StoreRepo.fetch_by_name(db, name)
+        recipes = []
+        db_store = RecipeRepo.fetch_by_name(db, name)
         print(db_store)
-        stores.append(db_store)
-        return stores
+        recipes.append(db_store)
+        return recipes
     else:
-        return StoreRepo.fetch_all(db)
+        return RecipeRepo.fetch_all(db)
 
 
-@app.get('/stores/{store_id}', tags=["Store"], response_model=schemas.Store)
-def get_store(store_id: int, db: Session = Depends(get_db)):
+@app.get('/recipes/{recipe_id}', tags=["Recipe"], response_model=schemas.Recipe)
+def get_store(recipe_id: int, db: Session = Depends(get_db)):
     """
-    Get the Store with the given ID provided by User stored in database
+    Get the Recipe with the given ID provided by User stored in database
     """
-    db_store = StoreRepo.fetch_by_id(db, store_id)
+    db_store = RecipeRepo.fetch_by_id(db, recipe_id)
     if db_store is None:
-        raise HTTPException(status_code=404, detail="Store not found with the given ID")
+        raise HTTPException(status_code=404, detail=DETAIL_RECIPE)
     return db_store
 
 
-@app.delete('/stores/{store_id}', tags=["Store"])
-async def delete_store(store_id: int, db: Session = Depends(get_db)):
+@app.delete('/recipes/{recipe_id}', tags=["Recipe"])
+async def delete_store(recipe_id: int, db: Session = Depends(get_db)):
     """
-    Delete the Item with the given ID provided by User stored in database
+    Delete the Ingredient with the given ID provided by User stored in database
     """
-    db_store = StoreRepo.fetch_by_id(db, store_id)
+    db_store = RecipeRepo.fetch_by_id(db, recipe_id)
     if db_store is None:
-        raise HTTPException(status_code=404, detail="Store not found with the given ID")
-    await StoreRepo.delete(db, store_id)
-    return "Store deleted successfully!"
+        raise HTTPException(status_code=404, detail=DETAIL_RECIPE)
+    await RecipeRepo.delete(db, recipe_id)
+    return "Recipe deleted successfully!"
 
 
 @app.get("/activities/", tags=["Activity"])

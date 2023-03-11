@@ -1,37 +1,37 @@
 from typing import List, Optional
-
 from pydantic import BaseModel
 
-
-class ItemBase(BaseModel):
+class IngredientBase(BaseModel):
     name: str
     price: float
-    description: Optional[str] = None
-    store_id: int
+    quantity: int
+    recipe_id: int
 
 
-class ItemCreate(ItemBase):
+class IngredientCreate(IngredientBase):
     pass
 
 
-class Item(ItemBase):
+class Ingredient(IngredientBase):
     id: int
 
     class Config:
         orm_mode = True
 
 
-class StoreBase(BaseModel):
+class RecipeBase(BaseModel):
     name: str
+    calories: int
+    description: Optional[str] = None
 
 
-class StoreCreate(StoreBase):
+class RecipeCreate(RecipeBase):
     pass
 
 
-class Store(StoreBase):
+class Recipe(RecipeBase):
     id: int
-    items: List[Item] = []
+    ingredients: List[Ingredient] = []
 
     class Config:
         orm_mode = True
