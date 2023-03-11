@@ -11,7 +11,7 @@ import asyncio
 import my_app.models as models
 import my_app.schemas as schemas
 from db import get_db, engine
-from my_app.repositories import ItemRepo, StoreRepo
+from my_app.repositories import ItemRepo, RecipeRepo
 
 app = FastAPI(title="Tugas Mandiri 1 - LAW 2023",
               description="Tara Mazaya Lababan - 2006473535",
@@ -100,61 +100,61 @@ async def update_item(item_id: int, item_request: schemas.Item, db: Session = De
         db_item.name = update_item_encoded['name']
         db_item.price = update_item_encoded['price']
         db_item.description = update_item_encoded['description']
-        db_item.store_id = update_item_encoded['store_id']
+        db_item.recipe_id = update_item_encoded['recipe_id']
         return await ItemRepo.update(db=db, item_data=db_item)
     else:
         raise HTTPException(status_code=400, detail="Item not found with the given ID")
 
 
-@app.post('/stores', tags=["Store"], response_model=schemas.Store, status_code=201)
-async def create_store(store_request: schemas.StoreCreate, db: Session = Depends(get_db)):
+@app.post('/recipes', tags=["Recipe"], response_model=schemas.Recipe, status_code=201)
+async def create_recipe(recipe_request: schemas.RecipeCreate, db: Session = Depends(get_db)):
     """
-    Create a Store and save it in the database
+    Create a Recipe and save it in the database
     """
-    db_store = StoreRepo.fetch_by_name(db, name=store_request.name)
-    print(db_store)
-    if db_store:
-        raise HTTPException(status_code=400, detail="Store already exists!")
+    db_recipe = RecipeRepo.fetch_by_name(db, name=recipe_request.name)
+    print(db_recipe)
+    if db_recipe:
+        raise HTTPException(status_code=400, detail="Recipe already exists!")
 
-    return await StoreRepo.create(db=db, store=store_request)
+    return await RecipeRepo.create(db=db, recipe=recipe_request)
 
 
-@app.get('/stores', tags=["Store"], response_model=List[schemas.Store])
-def get_all_stores(name: Optional[str] = None, db: Session = Depends(get_db)):
+@app.get('/recipes', tags=["Recipe"], response_model=List[schemas.Recipe])
+def get_all_recipes(name: Optional[str] = None, db: Session = Depends(get_db)):
     """
-    Get all the Stores stored in database
+    Get all the Recipes stored in database
     """
     if name:
-        stores = []
-        db_store = StoreRepo.fetch_by_name(db, name)
-        print(db_store)
-        stores.append(db_store)
-        return stores
+        recipes = []
+        db_recipe = RecipeRepo.fetch_by_name(db, name)
+        print(db_recipe)
+        recipes.append(db_recipe)
+        return recipes
     else:
-        return StoreRepo.fetch_all(db)
+        return RecipeRepo.fetch_all(db)
 
 
-@app.get('/stores/{store_id}', tags=["Store"], response_model=schemas.Store)
-def get_store(store_id: int, db: Session = Depends(get_db)):
+@app.get('/recipes/{recipe_id}', tags=["Recipe"], response_model=schemas.Recipe)
+def get_recipe(recipe_id: int, db: Session = Depends(get_db)):
     """
-    Get the Store with the given ID provided by User stored in database
+    Get the Recipe with the given ID provided by User stored in database
     """
-    db_store = StoreRepo.fetch_by_id(db, store_id)
-    if db_store is None:
-        raise HTTPException(status_code=404, detail="Store not found with the given ID")
-    return db_store
+    db_recipe = RecipeRepo.fetch_by_id(db, recipe_id)
+    if db_recipe is None:
+        raise HTTPException(status_code=404, detail="Recipe not found with the given ID")
+    return db_recipe
 
 
-@app.delete('/stores/{store_id}', tags=["Store"])
-async def delete_store(store_id: int, db: Session = Depends(get_db)):
+@app.delete('/recipes/{recipe_id}', tags=["Recipe"])
+async def delete_recipe(recipe_id: int, db: Session = Depends(get_db)):
     """
     Delete the Item with the given ID provided by User stored in database
     """
-    db_store = StoreRepo.fetch_by_id(db, store_id)
-    if db_store is None:
-        raise HTTPException(status_code=404, detail="Store not found with the given ID")
-    await StoreRepo.delete(db, store_id)
-    return "Store deleted successfully!"
+    db_recipe = RecipeRepo.fetch_by_id(db, recipe_id)
+    if db_recipe is None:
+        raise HTTPException(status_code=404, detail="Recipe not found with the given ID")
+    await RecipeRepo.delete(db, recipe_id)
+    return "Recipe deleted successfully!"
 
 
 @app.get("/activities/", tags=["Activity"])

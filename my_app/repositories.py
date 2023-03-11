@@ -7,7 +7,7 @@ from . import models, schemas
 class ItemRepo:
     
  async def create(db: Session, item: schemas.ItemCreate):
-        db_item = models.Item(name=item.name,price=item.price,description=item.description,store_id=item.store_id)
+        db_item = models.Item(name=item.name,price=item.price,description=item.description,recipe_id=item.recipe_id)
         db.add(db_item)
         db.commit()
         db.refresh(db_item)
@@ -35,29 +35,29 @@ class ItemRepo:
     
     
     
-class StoreRepo:
+class RecipeRepo:
     
-    async def create(db: Session, store: schemas.StoreCreate):
-            db_store = models.Store(name=store.name)
-            db.add(db_store)
+    async def create(db: Session, recipe: schemas.RecipeCreate):
+            db_recipe = models.Recipe(name=recipe.name)
+            db.add(db_recipe)
             db.commit()
-            db.refresh(db_store)
-            return db_store
+            db.refresh(db_recipe)
+            return db_recipe
         
     def fetch_by_id(db: Session,_id:int):
-        return db.query(models.Store).filter(models.Store.id == _id).first()
+        return db.query(models.Recipe).filter(models.Recipe.id == _id).first()
     
     def fetch_by_name(db: Session,name:str):
-        return db.query(models.Store).filter(models.Store.name == name).first()
+        return db.query(models.Recipe).filter(models.Recipe.name == name).first()
     
     def fetch_all(db: Session, skip: int = 0, limit: int = 100):
-        return db.query(models.Store).offset(skip).limit(limit).all()
+        return db.query(models.Recipe).offset(skip).limit(limit).all()
     
     async def delete(db: Session,_id:int):
-        db_store= db.query(models.Store).filter_by(id=_id).first()
-        db.delete(db_store)
+        db_recipe= db.query(models.Recipe).filter_by(id=_id).first()
+        db.delete(db_recipe)
         db.commit()
         
-    async def update(db: Session,store_data):
-        db.merge(store_data)
+    async def update(db: Session,recipe_data):
+        db.merge(recipe_data)
         db.commit()

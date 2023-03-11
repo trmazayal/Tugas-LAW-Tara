@@ -5,7 +5,7 @@ class ItemBase(BaseModel):
     name: str
     price: float
     description: Optional[str] = None
-    store_id: int
+    recipe_id: int
 
 
 class ItemCreate(ItemBase):
@@ -19,15 +19,15 @@ class Item(ItemBase):
         orm_mode = True
 
 
-class StoreBase(BaseModel):
+class RecipeBase(BaseModel):
     name: str
 
 
-class StoreCreate(StoreBase):
+class RecipeCreate(RecipeBase):
     pass
 
 
-class Store(StoreBase):
+class Recipe(RecipeBase):
     id: int
     items: List[Item] = []
 
